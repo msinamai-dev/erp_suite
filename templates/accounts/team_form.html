@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if membership %}Edit user{% else %}Add user{% endif %}{% endblock %}
+{% block crumb %} / <a href="{% url 'accounts:team' %}">Team & access</a> / {% if membership %}Edit{% else %}New{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{% if membership %}Edit user{% else %}Add user{% endif %}</h1>{% if membership %}<p>{{ membership.user.username }}</p>{% endif %}</div></div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="panel mb-3"><div class="panel-head"><h2>Person</h2></div><div class="panel-body"><div class="row g-3">
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.first_name %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.last_name %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.username %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.email %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.job_title %}
+      {% include "accounts/_field.html" with f=form.position %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.password %}</div>
+    {% if form.add_to_hr %}<div class="col-12"><div class="form-check">{{ form.add_to_hr }} <label class="form-check-label" for="{{ form.add_to_hr.id_for_label }}">{{ form.add_to_hr.label }}</label></div></div>{% endif %}
+    <div class="col-12"><div class="form-check">{{ form.is_active }} <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label></div></div>
+  </div></div></div>
+
+  <div class="panel mb-3"><div class="panel-head"><h2>Access</h2></div><div class="panel-body">
+    <div class="row g-3 mb-3"><div class="col-md-6">{% include "accounts/_field.html" with f=form.role %}
+      <div class="form-text">Company admins can manage users and use every department. Staff only use the departments ticked below.</div></div></div>
+    <label class="form-label">Departments <span class="text-muted fw-normal">· tick one or several</span></label>
+    {% include "accounts/_departments.html" with field_name="departments" field_errors=form.departments.errors %}
+  </div></div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-hivis px-4">Save user</button>
+    <a href="{% url 'accounts:team' %}" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}Leave request{% endblock %}
+{% block crumb %} / <a href="{% url 'hr:leave_list' %}">Leave requests</a> / {{ emp.full_name }}{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:#B4533C">
+  <div><h1>{{ emp.full_name }} {% cell lr "status" %}</h1>
+    <p>{{ lr.get_leave_type_display }} leave · {{ lr.start_date|date:"d M Y" }} to {{ lr.end_date|date:"d M Y" }} · {{ lr.days }} working day{{ lr.days|pluralize }}</p></div>
+  {% if lr.status == "pending" %}
+  <div class="d-flex gap-2">
+    <form method="post" action="{% url 'hr:leave_approve' lr.pk %}" class="m-0">{% csrf_token %}<button class="btn btn-hivis"><i class="bi bi-check2-circle"></i> Approve</button></form>
+    <form method="post" action="{% url 'hr:leave_reject' lr.pk %}" class="m-0">{% csrf_token %}<button class="btn btn-ghost text-danger"><i class="bi bi-x-circle"></i> Reject</button></form>
+  </div>
+  {% endif %}
+</div>
+<div class="row g-3">
+  <div class="col-lg-6"><div class="panel"><div class="panel-head"><h2>Request</h2></div><div class="panel-body">
+    <dl class="row mb-0">
+      <dt class="col-4 text-muted fw-normal">Employee</dt><dd class="col-8"><a href="{% url 'hr:employee_detail' emp.pk %}">{{ emp.full_name }}</a> ({{ emp.get_status_display }})</dd>
+      <dt class="col-4 text-muted fw-normal">Type</dt><dd class="col-8">{{ lr.get_leave_type_display }}{% if lr.uses_allowance %} <span class="small text-muted">· uses the monthly allowance</span>{% endif %}</dd>
+      <dt class="col-4 text-muted fw-normal">Dates</dt><dd class="col-8">{{ lr.start_date|date:"D d M Y" }} – {{ lr.end_date|date:"D d M Y" }}</dd>
+      <dt class="col-4 text-muted fw-normal">Working days</dt><dd class="col-8">{{ lr.days }}</dd>
+      <dt class="col-4 text-muted fw-normal">Reason</dt><dd class="col-8 mb-0">{{ lr.reason|default:"—"|linebreaksbr }}</dd>
+    </dl></div></div></div>
+  <div class="col-lg-6"><div class="panel"><div class="panel-head"><h2>{{ emp.first_name }}'s leave balance</h2></div><div class="panel-body">
+    <dl class="row mb-0">
+      <dt class="col-7 text-muted fw-normal">Earned so far</dt><dd class="col-5 text-end">{{ emp.leave_accrued }} d</dd>
+      <dt class="col-7 text-muted fw-normal">Taken (approved)</dt><dd class="col-5 text-end">{{ emp.leave_used }} d</dd>
+      <dt class="col-7 text-muted fw-normal">Waiting for approval</dt><dd class="col-5 text-end">{{ emp.leave_pending }} d</dd>
+      <dt class="col-7 fw-semibold">Remaining</dt><dd class="col-5 text-end fw-semibold">{{ emp.leave_balance }} d</dd>
+    </dl>
+    {% if lr.uses_allowance and lr.status == "pending" and lr.days > emp.leave_balance %}<p class="text-danger small mt-3 mb-0"><i class="bi bi-exclamation-triangle"></i> This request is more than their remaining balance, so it can't be approved.</p>{% endif %}
+  </div></div></div>
+</div>
+{% endblock %}

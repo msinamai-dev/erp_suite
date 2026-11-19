@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}My leave{% endblock %}
+{% block crumb %} / My leave{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:#B4533C"><div><h1>My leave</h1>
+  <p>You earn {{ per_month }} working days of leave every month. Unused days carry over, and leave you take is deducted{% if counted_types %} (applies to {{ counted_types }} leave){% endif %}.</p></div></div>
+
+<div class="site-board" style="--cols:4">
+  <div class="kpi"><div class="kpi-label">Earned so far</div><div class="kpi-value">{{ emp.leave_accrued }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Taken</div><div class="kpi-value">{{ emp.leave_used }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Waiting for approval</div><div class="kpi-value">{{ emp.leave_pending }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Remaining</div><div class="kpi-value text-ok">{{ emp.leave_balance }} d</div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <form method="post" class="panel" novalidate>{% csrf_token %}
+      <div class="panel-head"><h2>Request leave</h2></div>
+      <div class="panel-body">
+        {% if form.non_field_errors %}<div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>{% endif %}
+        {% for f in form %}
+        <div class="mb-3">
+          <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}
+          {% for e in f.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+        <button class="btn btn-hivis px-4">Send request</button>
+        <p class="small text-muted mt-3 mb-0">Weekends aren't counted. Available to request now: <strong>{{ emp.leave_available }}</strong> day{{ emp.leave_available|pluralize }}.</p>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-7">
+    <div class="panel"><div class="panel-head"><h2>My requests</h2></div>
+      <div class="table-responsive"><table class="erp-table">
+        <thead><tr><th>Type</th><th>From</th><th>To</th><th class="text-end">Days</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for r in requests %}
+          <tr><td>{{ r.get_leave_type_display }}</td><td>{{ r.start_date|date:"d M Y" }}</td><td>{{ r.end_date|date:"d M Y" }}</td><td class="text-end">{{ r.days }}</td><td>{% cell r "status" %}</td>
+            <td class="text-end">{% if r.status == "pending" %}<form method="post" action="{% url 'myspace:leave_cancel' r.pk %}" class="m-0" onsubmit="return confirm('Cancel this request?');">{% csrf_token %}<button class="btn btn-ghost btn-sm">Cancel</button></form>{% endif %}</td></tr>
+          {% empty %}<tr><td colspan="6" class="empty">You haven't requested any leave yet.</td></tr>{% endfor %}
+        </tbody>
+      </table></div></div>
+  </div>
+</div>
+{% endblock %}

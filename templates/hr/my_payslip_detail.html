@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}Payslip · {{ payroll.period|date:"F Y" }}{% endblock %}
+{% block crumb %} / <a href="{% url 'myspace:payslips' %}">My payslips</a> / {{ payroll.period|date:"F Y" }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Payslip</h1><p>{{ emp.full_name }} · {{ payroll.period|date:"F Y" }}</p></div><button class="btn btn-hivis" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save PDF</button></div>
+<div class="panel" style="max-width:780px"><div class="panel-head"><h2>Pay statement</h2><span class="badge text-bg-success">Paid</span></div><div class="panel-body">
+<div class="row g-3 mb-4"><div class="col-sm-6"><div class="text-muted small">Employee</div><strong>{{ emp.full_name }}</strong></div><div class="col-sm-6"><div class="text-muted small">Employee number</div><strong>{{ emp.number }}</strong></div><div class="col-sm-6"><div class="text-muted small">Department</div><strong>{{ emp.department|default:"—" }}</strong></div><div class="col-sm-6"><div class="text-muted small">Pay period</div><strong>{{ payroll.period|date:"F Y" }}</strong></div></div>
+<table class="table"><tbody><tr><th>Basic salary</th><td class="text-end">{{ payroll.basic|money }}</td></tr><tr><th>Allowances</th><td class="text-end">{{ payroll.allowances|money }}</td></tr><tr><th>Approved overtime</th><td class="text-end">{{ payroll.overtime|money }}</td></tr><tr><th>Bonus</th><td class="text-end">{{ payroll.bonus|money }}</td></tr><tr><th>Deductions</th><td class="text-end">− {{ payroll.deductions|money }}</td></tr><tr class="table-success"><th>Net pay</th><th class="text-end fs-5">{{ payroll.net_pay|money }}</th></tr></tbody></table>
+<p class="text-muted small mb-0">Keep this statement for your records. Contact HR if you believe any item is incorrect.</p>
+</div></div>
+{% endblock %}

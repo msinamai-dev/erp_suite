@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}{{ emp.full_name }}{% endblock %}
+{% block crumb %} / <a href="{% url 'hr:employee_list' %}">Employees</a> / {{ emp.full_name }}{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:#B4533C">
+  <div>
+    <h1>{{ emp.full_name }} {% cell emp "status" %}</h1>
+    <p>{{ emp.number }} · {{ emp.job_title }}{% if emp.department %} · {{ emp.department }}{% endif %} · hired {{ emp.hire_date|date:"d M Y" }}</p>
+  </div>
+  <a href="{% url 'hr:employee_edit' emp.pk %}" class="btn btn-ghost"><i class="bi bi-pencil-square"></i> Edit details</a>
+</div>
+
+<div class="panel mb-3">
+  <div class="panel-head"><h2>Status</h2><span class="small text-muted">Only <strong>Active</strong> people can be assigned tasks, projects, assets and requests. Terminated staff drop off new payroll and can't sign in.</span></div>
+  <div class="panel-body d-flex gap-2 flex-wrap align-items-center">
+    {% for value, label in statuses %}
+    <form method="post" action="{% url 'hr:employee_status' emp.pk value %}" class="m-0"
+          {% if value == 'terminated' %}onsubmit="return confirm('Mark {{ emp.full_name|escapejs }} as terminated?{% if emp.user_id %} Their sign-in will be switched off.{% endif %}');"{% endif %}>
+      {% csrf_token %}
+      <button class="btn {% if emp.status == value %}btn-hivis{% else %}btn-ghost{% endif %}" {% if emp.status == value %}disabled{% endif %}>
+        <i class="bi {% if value == 'active' %}bi-person-check{% elif value == 'on_leave' %}bi-airplane{% else %}bi-person-x{% endif %}"></i> {{ label }}
+      </button>
+    </form>
+    {% endfor %}
+    {% if last_admin %}<span class="small text-muted ms-2"><i class="bi bi-info-circle"></i> Can't be terminated: only active company administrator.</span>{% endif %}
+  </div>
+</div>
+
+<div class="site-board" style="--cols:4">
+  <div class="kpi"><div class="kpi-label">Leave earned</div><div class="kpi-value">{{ emp.leave_accrued }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Leave taken</div><div class="kpi-value">{{ emp.leave_used }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Awaiting approval</div><div class="kpi-value">{{ emp.leave_pending }} d</div></div>
+  <div class="kpi"><div class="kpi-label">Leave remaining</div><div class="kpi-value text-ok">{{ emp.leave_balance }} d</div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="panel"><div class="panel-head"><h2>Details</h2></div><div class="panel-body">
+      <dl class="row mb-0">
+        <dt class="col-5 text-muted fw-normal">Email</dt><dd class="col-7">{{ emp.email|default:"—" }}</dd>
+        <dt class="col-5 text-muted fw-normal">Phone</dt><dd class="col-7">{{ emp.phone|default:"—" }}</dd>
+        <dt class="col-5 text-muted fw-normal">Monthly salary</dt><dd class="col-7">{{ emp.salary|money }}</dd>
+        <dt class="col-5 text-muted fw-normal">Sign-in account</dt><dd class="col-7">{% if emp.user %}{{ emp.user.username }}{% if not emp.user.is_active %} <span class="tag tag-bad">disabled</span>{% endif %}{% else %}<span class="text-muted">Not linked — edit details to link one</span>{% endif %}</dd>
+        <dt class="col-5 text-muted fw-normal">Leave accrues from</dt><dd class="col-7 mb-0">{{ emp.leave_start|default:emp.hire_date|date:"d M Y" }}</dd>
+      </dl>
+    </div></div>
+  </div>
+  <div class="col-lg-7">
+    <div class="panel mb-3"><div class="panel-head"><h2>Recent leave</h2></div>
+      <div class="table-responsive"><table class="erp-table">
+        <thead><tr><th>Type</th><th>From</th><th>To</th><th class="text-end">Days</th><th>Status</th><th></th></tr></thead>
+        <tbody>{% for l in leaves %}<tr><td>{{ l.get_leave_type_display }}</td><td>{{ l.start_date|date:"d M Y" }}</td><td>{{ l.end_date|date:"d M Y" }}</td><td class="text-end">{{ l.days }}</td><td>{% cell l "status" %}</td><td class="row-actions"><a href="{% url 'hr:leave_detail' l.pk %}" title="Review"><i class="bi bi-eye"></i></a></td></tr>
+        {% empty %}<tr><td colspan="6" class="empty">No leave requests yet.</td></tr>{% endfor %}</tbody>
+      </table></div></div>
+    <div class="panel"><div class="panel-head"><h2>Payroll</h2></div>
+      <div class="table-responsive"><table class="erp-table">
+        <thead><tr><th>Period</th><th class="text-end">Basic</th><th class="text-end">Net pay</th><th>Status</th></tr></thead>
+        <tbody>{% for p in payrolls %}<tr><td>{{ p.period|date:"M Y" }}</td><td class="text-end">{{ p.basic|money }}</td><td class="text-end">{{ p.net_pay|money }}</td><td>{% cell p "status" %}</td></tr>
+        {% empty %}<tr><td colspan="4" class="empty">Not on any payroll yet.</td></tr>{% endfor %}</tbody>
+      </table></div></div>
+  </div>
+</div>
+{% endblock %}

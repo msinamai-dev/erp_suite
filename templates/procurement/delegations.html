@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Requisition delegation{% endblock %}
+{% block crumb %} / E-Procurement / Delegation{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><div class="eyebrow">DEPARTMENT CONTROLS</div><h1>Requisition delegation</h1><p>Assign staff in your department permission to initiate requisitions, approve them, or both. Permissions apply only to the selected department.</p></div>
+  <a class="btn btn-ghost" href="{% url 'procurement:home' %}">Back to procurement</a>
+</div>
+<div class="row g-3">
+  <div class="col-lg-5">
+    <section class="panel"><div class="panel-head"><h2>Assign permissions</h2></div><div class="panel-body">
+      <form method="post">{% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            {% if field.field.widget.input_type == "checkbox" %}<div class="form-check">{{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+            {% else %}<label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% endif %}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+          </div>
+        {% endfor %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <button class="btn btn-hivis">Save delegation</button>
+      </form>
+    </div></section>
+  </div>
+  <div class="col-lg-7"><section class="panel"><div class="panel-head"><div><h2>Current delegations</h2><p>Only active assignments for departments you manage are shown.</p></div></div><div class="table-responsive"><table class="erp-table"><thead><tr><th>Department</th><th>Staff member</th><th>Permissions</th><th>Granted by</th></tr></thead><tbody>
+    {% for authority in authorities %}<tr><td>{{ authority.department.label }}</td><td>{{ authority.membership.user.get_full_name|default:authority.membership.user.username }}</td><td>{% if authority.can_initiate %}<span class="tag tag-info">Initiate</span>{% endif %} {% if authority.can_approve %}<span class="tag tag-ok">Approve</span>{% endif %}</td><td>{% if authority.granted_by %}{{ authority.granted_by.user.get_full_name|default:authority.granted_by.user.username }}{% else %}Company admin{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">No requisition permissions have been delegated yet.</td></tr>{% endfor %}
+  </tbody></table></div></section></div>
+</div>
+{{ staff_by_department|json_script:"staff-by-department" }}
+<script>
+(function () {
+  const department = document.getElementById("id_department");
+  const staff = document.getElementById("id_membership");
+  const dataNode = document.getElementById("staff-by-department");
+  if (!department || !staff || !dataNode) return;
+  const staffByDepartment = JSON.parse(dataNode.textContent || "{}");
+  const selectedStaff = "{{ selected_membership|escapejs }}";
+  function refreshStaff() {
+    const previous = staff.value || selectedStaff;
+    staff.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "Choose staff member";
+    staff.appendChild(blank);
+    (staffByDepartment[department.value] || []).forEach(function (person) {
+      const option = document.createElement("option");
+      option.value = String(person.id);
+      option.textContent = person.label;
+      if (option.value === previous) option.selected = true;
+      staff.appendChild(option);
+    });
+  }
+  department.addEventListener("change", refreshStaff);
+  refreshStaff();
+})();
+</script>
+{% endblock %}

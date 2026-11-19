@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Registered companies{% endblock %}
+{% block crumb %} / Registered companies{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Registered companies</h1><p>New registrations stay locked until you approve them.</p></div></div>
+<div class="panel"><div class="table-responsive">
+  <table class="erp-table">
+    <thead><tr><th>Company</th><th>Contact</th><th>Departments</th><th>Users</th><th>Registered</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for c in companies %}
+      <tr>
+        <td><strong>{{ c.name }}</strong>{% if c.registration_number %}<div class="small text-muted">{{ c.registration_number }}</div>{% endif %}</td>
+        <td>{{ c.email }}{% if c.phone %}<div class="small text-muted">{{ c.phone }}</div>{% endif %}</td>
+        <td>{% for d in c.modules.all %}<span class="tag tag-neutral me-1">{{ d.label }}</span>{% endfor %}</td>
+        <td>{{ c.n_users }}</td>
+        <td>{{ c.created_at|date:"d M Y" }}</td>
+        <td>{% if c.is_approved %}<span class="tag tag-ok">Approved</span>{% else %}<span class="tag tag-warn">Awaiting approval</span>{% endif %}</td>
+        <td class="text-end">
+          <form method="post" action="{% url 'accounts:company_toggle' c.pk %}" class="m-0">{% csrf_token %}
+            {% if c.is_approved %}<button class="btn btn-ghost btn-sm">Suspend</button>{% else %}<button class="btn btn-hivis btn-sm">Approve</button>{% endif %}
+          </form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="7" class="empty">No companies have registered yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

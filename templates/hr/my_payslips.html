@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}My payslips{% endblock %}
+{% block crumb %} / My payslips{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My payslips</h1><p>Only finalized payroll marked as paid is published here. Your payslips are private to your account.</p></div></div>
+<div class="panel"><div class="table-responsive"><table class="erp-table"><thead><tr><th>Pay period</th><th>Basic</th><th>Allowances</th><th>Overtime</th><th>Bonus</th><th>Deductions</th><th class="text-end">Net pay</th><th></th></tr></thead><tbody>
+{% for p in payslips %}<tr><td>{{ p.period|date:"F Y" }}</td><td>{{ p.basic|money }}</td><td>{{ p.allowances|money }}</td><td>{{ p.overtime|money }}</td><td>{{ p.bonus|money }}</td><td>{{ p.deductions|money }}</td><td class="text-end fw-semibold">{{ p.net_pay|money }}</td><td><a class="btn btn-ghost btn-sm" href="{% url 'myspace:payslip_detail' p.pk %}">View</a></td></tr>{% empty %}<tr><td colspan="8" class="empty">No published payslips yet. They will appear after HR finalizes and marks payroll as paid.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

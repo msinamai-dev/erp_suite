@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}POS connection unavailable{% endblock %}
+{% block content %}
+<div class="container py-5"><div class="card border-warning shadow-sm"><div class="card-body p-4">
+<h1 class="h4"><i class="bi bi-database-exclamation text-warning me-2"></i>POS data is temporarily unavailable</h1>
+<p>The ERP could not read the separate POS database. Your POS data has not been changed.</p>
+<p class="text-muted mb-0">Ask the system administrator to check the POS database name, SQL Server host/instance, login permissions and ODBC driver configuration.</p>
+<a class="btn btn-outline-secondary mt-3" href="{% url 'dashboard' %}">Return to dashboard</a>
+</div></div></div>
+{% endblock %}

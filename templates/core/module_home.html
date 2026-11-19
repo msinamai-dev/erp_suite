@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ module.label }}{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:{{ module.color }}">
+  <div><h1>{{ module.label }}</h1><p>{{ module.blurb }}</p></div>
+</div>
+<div class="tile-grid">
+  {% for t in tiles %}
+  <div class="tile" style="--tick:{{ module.color }}">
+    <a href="{{ t.href }}" class="text-decoration-none" style="color:inherit">
+      <i class="bi {{ t.icon }} big"></i>
+      <h2 class="h5 mt-2 mb-1">{{ t.label }}</h2>
+      {% if t.count is not None %}<div class="tile-count">{{ t.count }}</div>{% endif %}
+    </a>
+    <div class="tile-foot">
+      <a href="{{ t.href }}">Open</a>
+      {% if t.create %}<a href="{{ t.create }}" class="btn btn-ghost btn-sm"><i class="bi bi-plus-lg"></i> New</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

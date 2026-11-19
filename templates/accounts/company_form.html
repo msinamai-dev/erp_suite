@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Company profile{% endblock %}
+{% block crumb %} / Company profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Company profile</h1><p>Manage company identity, address, currency, VAT, invoice details, leave policy and enabled modules from the frontend.</p></div></div>
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <div class="panel mb-3"><div class="panel-head"><h2>Company</h2></div><div class="panel-body"><div class="row g-3">
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.name %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.registration_number %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.email %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.phone %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.address %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.postal_address %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.business_type %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.tagline %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.logo %}{% if request.company.logo %}<div class="mt-2"><img src="{{ request.company.logo.url }}" alt="Current company logo" style="max-width:180px;max-height:90px;object-fit:contain"><div class="form-text">Current logo</div></div>{% endif %}</div>
+    <div class="col-md-3">{% include "accounts/_field.html" with f=form.primary_color %}</div>
+    <div class="col-md-3">{% include "accounts/_field.html" with f=form.accent_color %}</div>
+    <div class="col-md-3">{% include "accounts/_field.html" with f=form.currency_code %}</div>
+    <div class="col-md-3">{% include "accounts/_field.html" with f=form.currency_name %}</div>
+  </div></div></div>
+  <div class="panel mb-3"><div class="panel-head"><h2>Tax and VAT settings</h2><span class="small text-muted">These settings belong to this company and are maintained here by its administrator.</span></div><div class="panel-body"><div class="row g-3">
+    <div class="col-md-4">{% include "accounts/_field.html" with f=form.vat_registered %}</div>
+    <div class="col-md-4">{% include "accounts/_field.html" with f=form.vat_number %}</div>
+    <div class="col-md-4">{% include "accounts/_field.html" with f=form.vat_rate %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.bank_details %}</div>
+    <div class="col-md-6">{% include "accounts/_field.html" with f=form.invoice_terms %}</div>
+  </div><p class="form-text mt-3 mb-0">Confirm the applicable tax rate and registration requirements with your tax authority. A rate of 0 or VAT disabled suppresses the VAT breakdown.</p></div></div>
+  <div class="panel mb-3"><div class="panel-head"><h2>Leave policy</h2><span class="small text-muted">Set leave accrual rules for this company.</span></div><div class="panel-body"><div class="row g-3">
+    <div class="col-md-4">{% include "accounts/_field.html" with f=form.leave_days_per_month %}</div>
+    <div class="col-md-8">{% include "accounts/_field.html" with f=form.leave_deduct_types %}</div>
+  </div></div></div>
+  <div class="panel mb-3"><div class="panel-head"><h2>Enabled modules</h2><span class="small text-muted">Only selected modules appear for this company.</span></div>
+    <div class="panel-body">{% include "accounts/_departments.html" with field_name="modules" field_errors=form.modules.errors %}</div></div>
+  <button class="btn btn-hivis px-4">Save changes</button>
+</form>
+{% endblock %}

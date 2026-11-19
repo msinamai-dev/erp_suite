@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}POS transactions{% endblock %}
+{% block crumb %} / POS transactions{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">POS transactions</h1><p class="text-muted">Receipts, payments, taxes and line-item detail from POS.</p>
+<form method="get" class="d-flex flex-wrap align-items-end gap-2 mb-3">
+<div><label class="form-label">Shop / branch</label><select class="form-select" name="link">{% for l in links %}<option value="{{ l.pk }}" {% if selected.pk == l.pk %}selected{% endif %}>{{ l.label|default:l }}</option>{% endfor %}</select></div>
+<div><label class="form-label">Search</label><input class="form-control" name="q" value="{{ q }}" placeholder="Receipt, transaction, customer"></div>
+<div><label class="form-label">From</label><input class="form-control" type="date" name="start" value="{{ start }}"></div><div><label class="form-label">To</label><input class="form-control" type="date" name="end" value="{{ end }}"></div><div><label class="form-label">Rows</label><select class="form-select" name="page_size"><option value="10" {% if per_page == 10 %}selected{% endif %}>10</option><option value="15" {% if per_page == 15 %}selected{% endif %}>15</option></select></div><button class="btn btn-outline-secondary">Filter</button></form>
+{% if selected %}<div class="card"><div class="table-responsive"><table class="table table-hover align-middle mb-0 table-no-tools"><thead><tr><th>Date</th><th>Receipt / code</th><th>Customer</th><th>Branch</th><th>Payment</th><th>Currency</th><th class="text-end">Subtotal</th><th class="text-end">Tax</th><th class="text-end">Total</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.date_added|date:"d M Y H:i" }}</td><td><a href="{% url 'pos_bridge:transaction_detail' r.id %}">{{ r.receipt_number|default:r.code }}</a></td><td>{{ r.customer_name|default:"Walk-in" }}</td><td>{{ r.branch_name }}</td><td>{{ r.payment_method }}</td><td>{{ r.currency }}</td><td class="text-end">{{ r.sub_total|floatformat:2 }}</td><td class="text-end">{{ r.inclusive_tax_amount|add:r.exclusive_tax_amount|floatformat:2 }}</td><td class="text-end fw-semibold">{{ r.grand_total|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="9" class="text-center text-muted p-4">No transactions found.</td></tr>{% endfor %}
+</tbody></table></div></div>{% include "pos_bridge/_pagination.html" %}{% endif %}
+{% endblock %}

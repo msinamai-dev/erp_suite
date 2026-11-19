@@ -1,0 +1,113 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dashboard{% endblock %} · {{ COMPANY }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{% static 'css/erp.css' %}" rel="stylesheet">
+  {% if company_brand %}<style>
+    :root { --company-primary: {{ company_brand.primary_color|default:'#245A49' }}; --company-accent: {{ company_brand.accent_color|default:'#D8A33E' }}; }
+    .sidebar { border-top: 4px solid var(--company-primary); }
+    .brand-mark { background: var(--company-primary) !important; }
+    .btn-hivis { background: var(--company-primary) !important; border-color: var(--company-primary) !important; }
+    .nav-link-erp.active { border-left-color: var(--company-primary) !important; }
+    .company-logo { max-width: 34px; max-height: 34px; object-fit: contain; }
+  </style>{% endif %}
+  {% block head %}{% endblock %}
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="{% url 'dashboard' %}">
+    {% if company_brand.logo %}<img class="company-logo" src="{{ company_brand.logo.url }}" alt="{{ COMPANY }} logo">{% elif company_brand.logo_url %}<img class="company-logo" src="{{ company_brand.logo_url }}" alt="{{ COMPANY }} logo">{% else %}<span class="brand-mark">{{ COMPANY|slice:":1" }}</span>{% endif %}
+    <span class="brand-name">{{ COMPANY }}<span class="brand-sub">{{ company_brand.tagline|default:"Enterprise management" }}</span></span>
+  </a>
+  <nav class="nav-block">
+    <a class="nav-link-erp {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+      <i class="bi bi-grid-1x2"></i> Dashboard
+    </a>
+    {% for m in MODULES %}
+      <a class="nav-link-erp {% if m.active %}active{% endif %}" style="--tick:{{ m.color }}" href="{{ m.home }}">
+        <i class="bi {{ m.icon }}"></i> {{ m.label }}
+      </a>
+      {% if m.active %}
+      <div class="subnav">
+        {% for i in m.items %}
+          <a href="{{ i.href }}" class="{% if i.active %}active{% endif %}"><i class="bi {{ i.icon }}"></i> {{ i.label }}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+    {% if user.is_authenticated and user_company %}
+      <div class="nav-heading">My space</div>
+      <a class="nav-link-erp {% if request.resolver_match.namespace == 'myspace' %}active{% endif %}" href="{% url 'myspace:leave' %}"><i class="bi bi-calendar2-heart"></i> My leave<span class="nav-badge">{{ my_leave_balance }}d</span></a>
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'overtime' %}active{% endif %}" href="{% url 'myspace:overtime' %}"><i class="bi bi-clock-history"></i> My overtime</a>
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'payslips' or request.resolver_match.url_name == 'payslip_detail' %}active{% endif %}" href="{% url 'myspace:payslips' %}"><i class="bi bi-receipt"></i> My payslips</a>
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'news' %}active{% endif %}" href="{% url 'myspace:news' %}"><i class="bi bi-megaphone"></i> Company news</a>
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'complaints' %}active{% endif %}" href="{% url 'myspace:complaints' %}"><i class="bi bi-shield-exclamation"></i> Complaints</a>
+    {% endif %}
+    {% if is_company_admin or user.is_superuser %}
+      <div class="nav-heading">Administration</div>
+      {% if is_company_admin %}
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'team' or request.resolver_match.url_name == 'team_create' or request.resolver_match.url_name == 'team_edit' %}active{% endif %}" href="{% url 'accounts:team' %}"><i class="bi bi-people"></i> Team &amp; access</a>
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'company_edit' %}active{% endif %}" href="{% url 'accounts:company_edit' %}"><i class="bi bi-building-gear"></i> Company profile</a>
+      {% endif %}
+      {% if user.is_superuser %}
+      <a class="nav-link-erp {% if request.resolver_match.url_name == 'companies' %}active{% endif %}" href="{% url 'accounts:companies' %}"><i class="bi bi-buildings"></i> Registered companies{% if pending_companies %}<span class="nav-badge">{{ pending_companies }}</span>{% endif %}</a>
+      {% endif %}
+    {% endif %}
+  </nav>
+  <div class="side-foot">
+    {% if user.is_staff %}<a class="text-decoration-none" style="color:#9FB0AA" href="{% url 'admin:index' %}"><i class="bi bi-gear"></i> Admin site</a>{% endif %}
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-ghost btn-sm" id="menu-btn" aria-label="Open menu"><i class="bi bi-list fs-5"></i></button>
+      <div class="crumbs">
+        <a href="{% url 'dashboard' %}">Home</a>
+        {% if active_module %} / <a href="{{ active_module.home }}">{{ active_module.label }}</a>{% endif %}
+        {% block crumb %}{% endblock %}
+      </div>
+    </div>
+    <div class="user-chip">
+      {% if available_companies|length > 1 %}
+      <form method="post" action="{% url 'accounts:switch_company' %}" class="m-0 d-flex align-items-center gap-1">
+        {% csrf_token %}
+        <label for="company-switch" class="visually-hidden">Switch company</label>
+        <select id="company-switch" name="company_id" class="form-select form-select-sm" onchange="this.form.submit()" aria-label="Switch company">
+          {% for membership_option in available_companies %}
+          <option value="{{ membership_option.company_id }}" {% if membership_option.company_id == active_company_id %}selected{% endif %}>{{ membership_option.company.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% endif %}
+      <span class="avatar">{{ user.get_username|slice:":1"|upper }}</span>
+      <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.get_username }}</span>
+      <a class="btn btn-ghost btn-sm" href="{% url 'accounts:password_change' %}" title="Change password"><i class="bi bi-key"></i></a>
+      <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}
+        <button class="btn btn-ghost btn-sm" title="Sign out"><i class="bi bi-box-arrow-right"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <main class="content">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} d-flex align-items-center gap-2" role="alert">
+        <i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %}"></i> {{ message }}
+      </div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="{% static 'js/erp.js' %}"></script>
+<script src="{% static 'js/table-tools.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

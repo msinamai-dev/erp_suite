@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Company news{% endblock %}
+{% block crumb %} / Company news{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Company news</h1><p>Announcements published by HR for your company or department.</p></div></div>
+<div class="row g-3">{% for n in news_items %}<div class="col-lg-8"><article class="panel"><div class="panel-head"><h2>{{ n.title }}</h2><span class="small text-muted">{% if n.published_at %}{{ n.published_at|date:"d M Y H:i" }}{% endif %}</span></div><div class="panel-body"><div class="small text-muted mb-3">{% if n.department %}{{ n.department.name }}{% else %}All employees{% endif %}</div>{{ n.body|linebreaks }}</div></article></div>{% empty %}<div class="col-12"><div class="panel panel-body text-muted">There are no published announcements for you yet.</div></div>{% endfor %}</div>
+{% endblock %}

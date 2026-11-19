@@ -1,0 +1,9 @@
+<div class="dept-grid">
+  {% for m in modules %}
+  <label class="dept" style="--tick:{{ m.color }}">
+    <input type="checkbox" class="form-check-input" name="{{ field_name }}" value="{{ m.pk }}" {% if m.pk|stringformat:"s" in selected %}checked{% endif %}>
+    <span><strong><i class="bi {{ m.icon }}"></i> {{ m.label }}</strong><span class="d-block small text-muted">{{ m.blurb }}</span></span>
+  </label>
+  {% empty %}<p class="text-muted mb-0">No departments available yet.</p>{% endfor %}
+</div>
+{% for e in field_errors %}<div class="text-danger small mt-2"><i class="bi bi-exclamation-circle"></i> {{ e }}</div>{% endfor %}

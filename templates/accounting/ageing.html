@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}Receivables ageing{% endblock %}
+{% block crumb %} / Receivables ageing{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:#3E7C59">
+  <div><h1>Receivables ageing</h1><p>Unpaid invoice balances by customer, grouped by how far past due they are. As at {{ as_at|date:"d M Y" }}.</p></div>
+  <button class="btn btn-ghost no-print" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="site-board" style="--cols:3">
+  <div class="kpi"><div class="kpi-label"><i class="bi bi-wallet2"></i> Total outstanding</div><div class="kpi-value">{{ grand|money }}</div></div>
+  <div class="kpi"><div class="kpi-label"><i class="bi bi-exclamation-octagon"></i> Past due</div><div class="kpi-value" {% if overdue_total %}style="color:var(--bad)"{% endif %}>{{ overdue_total|money }}</div></div>
+  <div class="kpi"><div class="kpi-label"><i class="bi bi-percent"></i> Share past due</div><div class="kpi-value">{{ overdue_pct }}%</div></div>
+</div>
+
+<div class="panel"><div class="table-responsive">
+  <table class="erp-table">
+    <thead><tr>
+      <th>Customer</th><th class="text-end">Invoices</th>
+      {% for b in buckets %}<th class="text-end">{{ b }}</th>{% endfor %}
+      <th class="text-end">Total</th>
+    </tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><a href="{% url 'accounting:invoice_list' %}?q={{ r.customer.name|urlencode }}">{{ r.customer.name }}</a></td>
+        <td class="text-end">{{ r.count }}</td>
+        {% for v in r.cells %}<td class="text-end{% if forloop.counter0 == 4 and v %} text-danger fw-semibold{% endif %}">{% if v %}{{ v|money }}{% else %}—{% endif %}</td>{% endfor %}
+        <td class="text-end fw-semibold">{{ r.total|money }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" class="empty">Nothing outstanding. Every issued invoice has been paid.</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if rows %}
+    <tfoot><tr>
+      <th>Totals</th><th></th>
+      {% for v in totals %}<th class="text-end">{{ v|money }}</th>{% endfor %}
+      <th class="text-end">{{ grand|money }}</th>
+    </tr></tfoot>
+    {% endif %}
+  </table>
+</div></div>
+<p class="text-muted mt-3 mb-0 small">Only sent and overdue invoices with a balance are included; drafts, cancelled and fully paid invoices are left out. Days are counted from the due date.</p>
+{% endblock %}

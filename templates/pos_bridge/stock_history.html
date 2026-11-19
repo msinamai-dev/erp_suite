@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}POS stock history{% endblock %}
+{% block crumb %} / POS stock history{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">POS stock history</h1><p class="text-muted">Audit trail of stock changes in the POS database.</p>
+{% include "pos_bridge/_scope.html" %}
+{% if selected %}<form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3"><input type="hidden" name="link" value="{{ selected.pk }}"><div><label class="form-label">Search product / record ID</label><input class="form-control" name="q" value="{{ q }}" placeholder="Enter a product or record ID"></div><div><label class="form-label">Rows</label><select class="form-select" name="page_size"><option value="10" {% if per_page == 10 %}selected{% endif %}>10</option><option value="15" {% if per_page == 15 %}selected{% endif %}>15</option></select></div><button class="btn btn-outline-secondary">Search</button></form>{% endif %}
+{% if selected %}<div class="card"><div class="table-responsive"><table class="table table-hover mb-0 table-no-tools"><thead><tr><th>Date</th><th>Product</th><th class="text-end">Previous</th><th class="text-end">Added</th><th class="text-end">Removed</th><th class="text-end">New stock</th></tr></thead><tbody>{% for r in rows %}<tr><td>{{ r.added_on|date:"d M Y H:i" }}</td><td>{{ r.product_name }}</td><td class="text-end">{{ r.previous_stock }}</td><td class="text-end text-success">{{ r.quantity_added }}</td><td class="text-end text-danger">{{ r.quantity_removed }}</td><td class="text-end fw-semibold">{{ r.new_stock }}</td></tr>{% empty %}<tr><td colspan="6" class="text-muted p-3">No stock history found.</td></tr>{% endfor %}</tbody></table></div></div>{% include "pos_bridge/_pagination.html" %}{% endif %}
+{% endblock %}

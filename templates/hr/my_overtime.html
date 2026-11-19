@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}My overtime{% endblock %}
+{% block crumb %} / My overtime{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My overtime</h1><p>Log hours worked outside your normal schedule. HR reviews the request and sets the applicable rate before it is included in payroll.</p></div></div>
+<div class="row g-3">
+  <div class="col-lg-4"><form method="post" class="panel" novalidate>{% csrf_token %}<div class="panel-head"><h2>Log overtime</h2></div><div class="panel-body">
+    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+    {% for f in form %}<div class="mb-3"><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}</label>{{ f }}{% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>{% endfor %}
+    <button class="btn btn-hivis">Submit overtime</button>
+  </div></form></div>
+  <div class="col-lg-8"><div class="panel"><div class="panel-head"><h2>My overtime history</h2></div><div class="table-responsive"><table class="erp-table"><thead><tr><th>Date</th><th>Hours</th><th>Reason</th><th>Rate</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+  {% for e in entries %}<tr><td>{{ e.date|date:"d M Y" }}</td><td>{{ e.hours }}</td><td>{{ e.reason|default:"—" }}</td><td>{{ e.hourly_rate|money }}</td><td>{{ e.amount|money }}</td><td>{% cell e "status" %}</td></tr>{% empty %}<tr><td colspan="6" class="empty">No overtime logged yet.</td></tr>{% endfor %}
+  </tbody></table></div></div></div>
+</div>
+{% endblock %}

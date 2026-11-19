@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}POS purchase orders{% endblock %}
+{% block crumb %} / POS purchase orders{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">POS purchase orders</h1><p class="text-muted">Purchasing records from POS, separate from ERP e-procurement.</p>
+{% include "pos_bridge/_scope.html" %}
+{% if selected %}<form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3"><input type="hidden" name="link" value="{{ selected.pk }}"><div><label class="form-label">Search</label><input class="form-control" name="q" value="{{ q }}" placeholder="PO number, product ID or payment"></div><div><label class="form-label">Rows</label><select class="form-select" name="page_size"><option value="10" {% if per_page == 10 %}selected{% endif %}>10</option><option value="15" {% if per_page == 15 %}selected{% endif %}>15</option></select></div><button class="btn btn-outline-secondary">Search</button></form>{% endif %}
+{% if selected %}<div class="card"><div class="table-responsive"><table class="table table-hover mb-0 table-no-tools"><thead><tr><th>Date</th><th>POS PO #</th><th>Product</th><th class="text-end">Quantity</th><th class="text-end">Cost price</th><th class="text-end">Total</th><th>Payment</th></tr></thead><tbody>{% for r in rows %}<tr><td>{{ r.date|date:"d M Y H:i" }}</td><td>PO-{{ r.id }}</td><td>{{ r.product_name }}</td><td class="text-end">{{ r.quantity }}</td><td class="text-end">{{ r.cost_price|floatformat:2 }}</td><td class="text-end">{{ r.total_amount|floatformat:2 }}</td><td>{{ r.payment_method|default:"—" }}</td></tr>{% empty %}<tr><td colspan="7" class="text-muted p-3">No purchase orders found.</td></tr>{% endfor %}</tbody></table></div></div>{% include "pos_bridge/_pagination.html" %}{% endif %}
+{% endblock %}

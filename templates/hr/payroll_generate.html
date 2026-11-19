@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Generate payroll{% endblock %}
+{% block crumb %} / <a href="{% url 'hr:payroll_list' %}">Payroll</a> / Generate{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Generate payroll</h1><p>Adds current employees to a month's payroll with their monthly salary and any approved overtime. HR can enter bonuses, allowances and deductions before marking payroll as paid.</p></div></div>
+<form method="post" class="panel" style="max-width:520px">{% csrf_token %}
+  <div class="panel-body">
+    <label class="form-label" for="month">Month</label>
+    <input type="month" id="month" name="month" value="{{ default_month }}" class="form-control mb-3" required>
+    <p class="text-muted small">{{ eligible }} employee{{ eligible|pluralize }} on the books. Approved overtime is included automatically. You can edit overtime, bonuses, allowances and deductions on each line before publishing payslips.</p>
+    <div class="d-flex gap-2"><button class="btn btn-hivis px-4">Generate</button><a href="{% url 'hr:payroll_list' %}" class="btn btn-ghost">Cancel</a></div>
+  </div>
+</form>
+{% endblock %}

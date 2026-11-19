@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load erp_tags %}
+{% block title %}Invoice {{ invoice.number }}{% endblock %}
+{% block crumb %} / <a href="{% url 'accounting:invoice_list' %}">Invoices</a> / {{ invoice.number }}{% endblock %}
+{% block content %}
+<div class="page-head" style="border-top-color:#3E7C59">
+  <div>
+    <h1>{{ invoice.number }} {% cell invoice "status" %}</h1>
+    <p>{{ invoice.customer }} · issued {{ invoice.issue_date|date:"d M Y" }}{% if invoice.days_overdue %} · <span class="text-danger fw-semibold">{{ invoice.days_overdue }} day{{ invoice.days_overdue|pluralize }} overdue</span>{% endif %}</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'accounting:invoice_print' invoice.pk %}" target="_blank" rel="noopener" class="btn btn-hivis"><i class="bi bi-printer"></i> Print invoice</a>
+    {% if can_pay %}<a href="{% url 'accounting:invoice_pay' invoice.pk %}" class="btn btn-ghost"><i class="bi bi-cash-coin"></i> Record payment</a>{% endif %}
+    {% if can_send %}
+    <form method="post" action="{% url 'accounting:invoice_status' invoice.pk 'sent' %}" class="m-0">{% csrf_token %}
+      <button class="btn btn-ghost"><i class="bi bi-send"></i> Mark as sent</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'accounting:invoice_edit' invoice.pk %}" class="btn btn-ghost"><i class="bi bi-pencil-square"></i> Edit</a>
+    {% if can_cancel %}
+    <form method="post" action="{% url 'accounting:invoice_status' invoice.pk 'cancelled' %}" class="m-0"
+          onsubmit="return confirm('Cancel invoice {{ invoice.number }}? Its ledger entries will be removed.');">{% csrf_token %}
+      <button class="btn btn-ghost text-danger"><i class="bi bi-x-circle"></i> Cancel</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="site-board" style="--cols:4">
+  <div class="kpi"><div class="kpi-label">Invoice total</div><div class="kpi-value">{{ invoice.amount|money }}</div></div>
+  <div class="kpi"><div class="kpi-label">Paid</div><div class="kpi-value text-ok">{{ invoice.amount_paid|money }}</div></div>
+  <div class="kpi"><div class="kpi-label">Balance due</div><div class="kpi-value" {% if invoice.balance and invoice.status != 'cancelled' %}style="color:var(--bad)"{% endif %}>{{ invoice.balance|money }}</div></div>
+  <div class="kpi"><div class="kpi-label">Due date</div><div class="kpi-value">{{ invoice.due_date|date:"d M Y" }}</div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="panel">
+      <div class="panel-head"><h2>Details</h2></div>
+      <div class="panel-body">
+        <dl class="row mb-0">
+          <dt class="col-5 text-muted fw-normal">Customer</dt><dd class="col-7">{{ invoice.customer }}</dd>
+          <dt class="col-5 text-muted fw-normal">Contact</dt><dd class="col-7">{{ invoice.customer.contact_person|default:"—" }}</dd>
+          <dt class="col-5 text-muted fw-normal">Email</dt><dd class="col-7">{{ invoice.customer.email|default:"—" }}</dd>
+          <dt class="col-5 text-muted fw-normal">Phone</dt><dd class="col-7">{{ invoice.customer.phone|default:"—" }}</dd>
+          <dt class="col-5 text-muted fw-normal">Sales order</dt><dd class="col-7">{{ invoice.sales_order|default:"—" }}</dd>
+          <dt class="col-5 text-muted fw-normal">Issue date</dt><dd class="col-7">{{ invoice.issue_date|date:"d M Y" }}</dd>
+          <dt class="col-5 text-muted fw-normal">Due date</dt><dd class="col-7">{{ invoice.due_date|date:"d M Y" }}</dd>
+          {% if invoice.notes %}<dt class="col-5 text-muted fw-normal">Notes</dt><dd class="col-7 mb-0">{{ invoice.notes|linebreaksbr }}</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Payments received</h2>
+        {% if can_pay %}<a href="{% url 'accounting:invoice_pay' invoice.pk %}" class="btn btn-hivis btn-sm"><i class="bi bi-plus-lg"></i> Record payment</a>{% endif %}
+      </div>
+      <div class="table-responsive">
+        <table class="erp-table">
+          <thead><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Reference</th><th class="text-end">Amount</th><th></th></tr></thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td>{{ p.number }}</td><td>{{ p.date|date:"d M Y" }}</td><td>{{ p.get_method_display }}</td>
+              <td>{{ p.reference|default:"—" }}</td><td class="text-end">{{ p.amount|money }}</td>
+              <td class="row-actions">
+                <a href="{% url 'accounting:payment_edit' p.pk %}" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                <a href="{% url 'accounting:payment_delete' p.pk %}" title="Delete" class="del"><i class="bi bi-trash3"></i></a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="empty">No payments recorded yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

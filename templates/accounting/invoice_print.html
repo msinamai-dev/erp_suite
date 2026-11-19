@@ -1,0 +1,157 @@
+{% load erp_tags %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Invoice {{ invoice.number }} · {{ company }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--ink:#16211F;--muted:#66716D;--rule:#D6DBD2;--paper:#F4F6F0;--hivis:#F2B705;--ok:#2E7D4F;--bad:#B23A2E;--grey:#7A8581}
+    *{box-sizing:border-box}
+    body{margin:0;background:#E3E6DF;color:var(--ink);font:13px/1.45 "IBM Plex Sans",system-ui,Arial,sans-serif}
+    h1,h2,.brand-name,.doc-title{font-family:"Barlow Semi Condensed","IBM Plex Sans",Arial,sans-serif}
+    .toolbar{max-width:210mm;margin:14px auto 0;display:flex;gap:8px;justify-content:space-between;padding:0 4px}
+    .toolbar a,.toolbar button{font:600 13px "IBM Plex Sans",Arial,sans-serif;padding:8px 14px;border-radius:3px;border:1px solid var(--rule);background:#fff;color:var(--ink);text-decoration:none;cursor:pointer}
+    .toolbar .primary{background:var(--hivis);border-color:#D9A300}
+    .sheet{position:relative;width:210mm;min-height:297mm;margin:12px auto 30px;background:#fff;padding:14mm 14mm 12mm;box-shadow:0 2px 14px rgba(0,0,0,.18);overflow:hidden}
+    .top{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid var(--hivis);padding-bottom:14px}
+    .brand{display:flex;gap:12px;align-items:flex-start}
+    .mark{width:46px;height:46px;background:var(--hivis);display:grid;place-items:center;font:700 26px "Barlow Semi Condensed",Arial,sans-serif;border-radius:3px;flex:none}
+    .brand-name{font-size:24px;font-weight:700;line-height:1.1}
+    .small{font-size:11.5px;color:var(--muted)}
+    .doc{text-align:right}
+    .doc-title{font-size:34px;font-weight:700;letter-spacing:.06em;line-height:1}
+    .doc-no{font-size:15px;font-weight:600;margin-top:6px}
+    .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin:18px 0}
+    .label{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px}
+    .bill-name{font-size:16px;font-weight:600}
+    table{width:100%;border-collapse:collapse}
+    .meta td{padding:3px 0;vertical-align:top}.meta td:first-child{color:var(--muted);width:42%}
+    .items{margin-top:6px}
+    .items th{background:var(--paper);text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .items td{padding:10px;border-bottom:1px solid #E8EBE4;vertical-align:top}
+    .r{text-align:right;white-space:nowrap}
+    .below{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:16px}
+    .totals td{padding:5px 0}
+    .totals tr.grand td{border-top:2px solid var(--ink);padding-top:8px;font-size:15px;font-weight:700}
+    .totals tr.due td{background:var(--paper);padding:8px 10px;font:700 17px "Barlow Semi Condensed",Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .words{font-style:italic;color:#33413D;margin-top:2px}
+    .pay{margin-top:16px}
+    .pay th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule)}
+    .pay td{padding:5px 8px;border-bottom:1px solid #EEF0EA}
+    .box{border:1px solid var(--rule);border-radius:3px;padding:10px 12px;margin-top:14px}
+    .sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:38px}
+    .sign div{border-top:1px solid #8F9A95;padding-top:4px;font-size:11.5px;color:var(--muted)}
+    .foot{position:absolute;left:14mm;right:14mm;bottom:10mm;text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+    .stamp{position:absolute;top:92mm;left:50%;transform:translateX(-50%) rotate(-24deg);font:700 92px "Barlow Semi Condensed",Arial,sans-serif;letter-spacing:.12em;border:8px solid;padding:0 26px;border-radius:10px;opacity:.13;pointer-events:none;white-space:nowrap}
+    .stamp.ok{color:var(--ok)}.stamp.bad{color:var(--bad)}.stamp.grey{color:var(--grey)}
+    @page{size:A4;margin:0}
+    @media print{
+      body{background:#fff}.toolbar{display:none}
+      .sheet{margin:0;box-shadow:none;width:auto;min-height:auto;height:297mm;page-break-after:avoid}
+    }
+  </style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="{% url 'accounting:invoice_detail' invoice.pk %}">&larr; Back to invoice</a>
+  <button class="primary" onclick="window.print()">Print / Save as PDF</button>
+</div>
+
+<div class="sheet">
+  {% if stamp %}<div class="stamp {{ stamp.1 }}">{{ stamp.0 }}</div>{% endif %}
+
+  <div class="top">
+    <div class="brand">
+      <div class="mark">{{ company|slice:":1" }}</div>
+      <div>
+        <div class="brand-name">{{ company }}</div>
+        <div class="small">
+          {{ profile.address }}{% if profile.postal_address %}<br>Postal: {{ profile.postal_address|linebreaksbr }}{% endif %}<br>
+          {% if profile.phone %}{{ profile.phone }}{% endif %}{% if profile.phone and profile.email %} · {% endif %}{{ profile.email }}
+          {% if profile.tax_id %}<br>Registration / VAT No: {{ profile.tax_id }}{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="doc">
+      <div class="doc-title">{% if vat %}TAX INVOICE{% else %}INVOICE{% endif %}</div>
+      <div class="doc-no">{{ invoice.number }}</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="label">Bill to</div>
+      <div class="bill-name">{{ invoice.customer.name }}</div>
+      <div class="small" style="color:var(--ink)">
+        {% if invoice.customer.contact_person %}Attn: {{ invoice.customer.contact_person }}<br>{% endif %}
+        {% if invoice.customer.address %}{{ invoice.customer.address|linebreaksbr }}<br>{% endif %}
+        {% if invoice.customer.city %}{{ invoice.customer.city }}<br>{% endif %}
+        {% if invoice.customer.phone %}{{ invoice.customer.phone }}{% endif %}{% if invoice.customer.phone and invoice.customer.email %} · {% endif %}{{ invoice.customer.email }}
+      </div>
+    </div>
+    <div>
+      <table class="meta">
+        <tr><td>Invoice date</td><td class="r"><strong>{{ invoice.issue_date|date:"d M Y" }}</strong></td></tr>
+        <tr><td>Due date</td><td class="r"><strong>{{ invoice.due_date|date:"d M Y" }}</strong></td></tr>
+        <tr><td>Payment terms</td><td class="r">{% if terms_days > 0 %}Net {{ terms_days }} days{% else %}Due on receipt{% endif %}</td></tr>
+        {% if invoice.sales_order %}<tr><td>Sales order</td><td class="r">{{ invoice.sales_order.number }}</td></tr>{% endif %}
+      </table>
+    </div>
+  </div>
+
+  <table class="items">
+    <thead><tr><th style="width:38px">#</th><th>Description</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Disc.</th><th class="r">Amount</th></tr></thead>
+    <tbody>
+      {% for l in lines %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><strong>{{ l.desc }}</strong>{% if l.sub %}<div class="small">{{ l.sub }}</div>{% endif %}</td>
+        <td class="r">{{ l.qty }}</td>
+        <td class="r">{{ l.price|money }}</td>
+        <td class="r">{% if l.disc %}{{ l.disc|floatformat:"-2" }}%{% else %}—{% endif %}</td>
+        <td class="r">{{ l.total|money }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="below">
+    <div>
+      <div class="label">Amount in words</div>
+      <div class="words">{{ words }}</div>
+      {% if invoice.notes %}<div class="box"><div class="label">Notes</div>{{ invoice.notes|linebreaksbr }}</div>{% endif %}
+      {% if profile.bank %}<div class="box"><div class="label">Bank details</div>{{ profile.bank }}</div>{% endif %}
+    </div>
+    <div>
+      <table class="totals">
+        {% if vat %}
+        <tr><td>Subtotal (excl. VAT)</td><td class="r">{{ net|money }}</td></tr>
+        <tr><td>VAT {{ vat_rate|floatformat:"-2" }}%</td><td class="r">{{ vat|money }}</td></tr>
+        {% endif %}
+        <tr class="grand"><td>Total</td><td class="r">{{ invoice.amount|money }}</td></tr>
+        <tr><td>Amount paid</td><td class="r">{{ invoice.amount_paid|money }}</td></tr>
+        <tr class="due"><td>Balance due</td><td class="r">{{ invoice.balance|money }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  {% if payments %}
+  <table class="pay">
+    <thead><tr><th colspan="4">Payments received</th></tr></thead>
+    <tbody>
+      {% for p in payments %}
+      <tr><td>{{ p.date|date:"d M Y" }}</td><td>{{ p.number }}</td><td>{{ p.get_method_display }}{% if p.reference %} · {{ p.reference }}{% endif %}</td><td class="r">{{ p.amount|money }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if profile.terms %}<div class="small" style="margin-top:16px"><strong style="color:var(--ink)">Terms:</strong> {{ profile.terms }}</div>{% endif %}
+
+  <div class="sign"><div>Prepared by</div><div>Received by (name, signature, date)</div></div>
+
+  <div class="foot">Thank you for your business · {{ company }}</div>
+</div>
+</body>
+</html>

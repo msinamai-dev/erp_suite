@@ -1,0 +1,13 @@
+{% if links %}
+<form method="get" class="d-flex flex-wrap gap-2 align-items-end mb-3">
+  <div><label class="form-label" for="pos-link">Shop / branch</label><select class="form-select" name="link" id="pos-link">{% for link in links %}<option value="{{ link.pk }}" {% if selected.pk == link.pk %}selected{% endif %}>{{ link.label|default:link }}</option>{% endfor %}</select></div>
+  {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+  {% if start %}<input type="hidden" name="start" value="{{ start }}">{% endif %}
+  {% if end %}<input type="hidden" name="end" value="{{ end }}">{% endif %}
+  {% if low_stock %}<input type="hidden" name="low_stock" value="1">{% endif %}
+  {% if per_page %}<input type="hidden" name="page_size" value="{{ per_page }}">{% endif %}
+  <button class="btn btn-outline-secondary" type="submit">Switch shop</button>
+</form>
+{% else %}
+<div class="alert alert-info">No POS shop has been linked to this ERP company yet. A company administrator can request owner approval in POS Intelligence.</div>
+{% endif %}
